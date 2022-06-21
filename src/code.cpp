@@ -5,6 +5,7 @@
 #include <array>
 #include <set>
 #include <utility>
+#include <limits.h>
 using namespace std;
 int nowmap[16][16];
 
@@ -13,27 +14,27 @@ int my_score[]
 {
     10000000,   //ooooo
     1000000,    //活四
-    100,        //死四
-    100000,     //活三
+    10000,        //死四
+    10000,     //活三
     100,        //死三
     100,        //活二
     10,         //死二
-    5,          //活一
-    2,          //死一
-    0,
+    1,          //活一
+    0,          //死一
+    0
 };
 
-int ai_score[]
-{
-    10000000,   //xxxxx
-    1000000,    //活四
-    100,        //死四
-    100000,     //活三
-    100,        //死三
-    100,        //活二
-    10,         //死二
-    5,          //一
-};
+//int ai_score[]
+//{
+//    1000000,   //xxxxx
+//    100000,    //活四
+//    1000,        //死四
+//    10000,     //活三
+//    100,        //死三
+//    100,        //活二
+//    10,         //死二
+//    5,          //一
+//};
 
 
 
@@ -47,6 +48,8 @@ int player;
 //player = 1;
 const int SIZE = 15;
 std::array<std::array<int, SIZE>, SIZE> board;
+
+
 
 struct node
 {
@@ -77,12 +80,12 @@ struct node
 //    }
 //
 };
-
+int alphabeta(node now, int depth, int alpha, int beta, bool maximizingPlayer);
 void read_board(std::ifstream& fin) {
     fin >> player;
     for (int i = 0; i < SIZE; i++) {
         for (int j = 0; j < SIZE; j++) {
-            fin >> board[i][j];
+            fin >> nowmap[i][j];
         }
     }
 }
@@ -96,21 +99,39 @@ void write_valid_spot(std::ofstream& fout) {
 //        int y = (rand() % SIZE);
         int value = -1000000000;
         node n;
+        int count = 0;
         for(int i=0; i<SIZE; i++)
         {
             for(int j=0; j<SIZE; j++)
             {
                 if(n.Board[i][j]==0)
                 {
+                    count++;
                     node newnode;
-                    newnode[i][j]=player;
-                    int ab = minimax(newnode, depth-1, false);
+                    newnode.Board[i][j]=player;
+                    int ab = alphabeta(newnode, 0, -INT_MAX, INT_MAX, false); //!!!!!
                     //x y
-                    value = max(value, ab);
-                    if(value==ab)
+                    // cout << "ab" << ab << "ij" << i << j << endl;
+                    cout << "{" << i <<", "<< j <<"} = "<< ab << "\n";
+                    
+                    // value = max(value, ab);
+                
+                    if(value<ab){ //!!!!!!!!!!!!!!!!!!!!!!!
+                        value = ab;
                         x=i, y=j;
+                    }
                 }
             }
+        }
+        if(count == 225)
+        {
+            x = 7;
+            y = 7;
+        }
+        else if(count == 224)
+        {
+            x = 6;
+            y = 9;
         }
             fout << x << " " << y << std::endl;
             // Remember to flush the output to ensure the last action is written to file.
@@ -118,102 +139,103 @@ void write_valid_spot(std::ofstream& fout) {
 }
 
 
-bool checkneighbor(std::array<std::array<int, SIZE>, SIZE> boardnow, int i, int j)
-{
-    if(i>0 && i<14)
-    {
-        if(j>0 && j<14)
-        {
-            return boardnow[i-1][j-1]>0 || boardnow[i-1][j]>0 || boardnow[i-1][j+1]>0 || boardnow[i][j-1]>0 || boardnow[i][j+1]>0 || boardnow[i+1][j-1]>0 || boardnow[i+1][j]>0 || boardnow[i+1][j+1]>0;
-        }
-        else if(j==0)
-        {
-            return boardnow[i-1][j]>0 || boardnow[i-1][j+1]>0 || boardnow[i][j+1]>0 || boardnow[i+1][j]>0 || boardnow[i+1][j+1]>0;
-        }
-        else
-        {
-            return boardnow[i-1][j]>0 || boardnow[i-1][j-1]>0 || boardnow[i][j-1]>0 || boardnow[i+1][j]>0 || boardnow[i+1][j-1]>0;
-        }
-    }
-    else if(i == 0)
-    {
-                if(j>0 && j<14)
-                {
-                    return boardnow[i][j-1]>0 || boardnow[i][j+1]>0 || boardnow[i+1][j-1]>0 || boardnow[i+1][j]>0 || boardnow[i][j+1]>0;
-                }
-                else if(j==0)
-                {
-                    return boardnow[i+1][j]>0 || boardnow[i][j+1]>0 || boardnow[i+1][j+1]>0;
-                }
-                else
-                {
-                    return boardnow[i+1][j]>0 || boardnow[i][j-1]>0 || boardnow[i+1][j-1]>0;
-                }
-        }
-    else
-        {
-                if(j>0 && j<14)
-                {
-                    return boardnow[i][j-1]>0 || boardnow[i-1][j-1]>0 || boardnow[i-1][j]>0 || boardnow[i-1][j+1]>0 || boardnow[i][j+1]>0;
-                }
-                else if(j==0)
-                {
-                    return boardnow[i-1][j]>0 || boardnow[i-1][j+1]>0 || boardnow[i][j+1]>0;
-                }
-                else{
-                    return boardnow[i][j-1]>0 || boardnow[i-1][j-1]>0 || boardnow[i-1][j]>0;
-                }
-            }
-}
+//bool checkneighbor(std::array<std::array<int, SIZE>, SIZE> boardnow, int i, int j)
+//{
+//    if(i>0 && i<14)
+//    {
+//        if(j>0 && j<14)
+//        {
+//            return boardnow[i-1][j-1]>0 || boardnow[i-1][j]>0 || boardnow[i-1][j+1]>0 || boardnow[i][j-1]>0 || boardnow[i][j+1]>0 || boardnow[i+1][j-1]>0 || boardnow[i+1][j]>0 || boardnow[i+1][j+1]>0;
+//        }
+//        else if(j==0)
+//        {
+//            return boardnow[i-1][j]>0 || boardnow[i-1][j+1]>0 || boardnow[i][j+1]>0 || boardnow[i+1][j]>0 || boardnow[i+1][j+1]>0;
+//        }
+//        else
+//        {
+//            return boardnow[i-1][j]>0 || boardnow[i-1][j-1]>0 || boardnow[i][j-1]>0 || boardnow[i+1][j]>0 || boardnow[i+1][j-1]>0;
+//        }
+//    }
+//    else if(i == 0)
+//    {
+//                if(j>0 && j<14)
+//                {
+//                    return boardnow[i][j-1]>0 || boardnow[i][j+1]>0 || boardnow[i+1][j-1]>0 || boardnow[i+1][j]>0 || boardnow[i][j+1]>0;
+//                }
+//                else if(j==0)
+//                {
+//                    return boardnow[i+1][j]>0 || boardnow[i][j+1]>0 || boardnow[i+1][j+1]>0;
+//                }
+//                else
+//                {
+//                    return boardnow[i+1][j]>0 || boardnow[i][j-1]>0 || boardnow[i+1][j-1]>0;
+//                }
+//        }
+//    else
+//        {
+//                if(j>0 && j<14)
+//                {
+//                    return boardnow[i][j-1]>0 || boardnow[i-1][j-1]>0 || boardnow[i-1][j]>0 || boardnow[i-1][j+1]>0 || boardnow[i][j+1]>0;
+//                }
+//                else if(j==0)
+//                {
+//                    return boardnow[i-1][j]>0 || boardnow[i-1][j+1]>0 || boardnow[i][j+1]>0;
+//                }
+//                else{
+//                    return boardnow[i][j-1]>0 || boardnow[i-1][j-1]>0 || boardnow[i-1][j]>0;
+//                }
+//            }
+//}
 
-set<Point> possibleMoves;
-{
-        for(int i=0; i<15; i++)
-        {
-            for(int j=0; j<15; j++)
-            {
-                if(board[i][j]>0) continue;
-                if(checkneighbor(board, i, j))
-                {
-                    possibleMoves.insert(Point(i,j));
-                }
-            }
-        }
-        return possibleMoves;
-}
+//set<Point> possibleMoves;
+//{
+//        for(int i=0; i<15; i++)
+//        {
+//            for(int j=0; j<15; j++)
+//            {
+//                if(board[i][j]>0) continue;
+//                if(checkneighbor(board, i, j))
+//                {
+//                    possibleMoves.insert(Point(i,j));
+//                }
+//            }
+//        }
+//        return possibleMoves;
+//}
 
-int count_lines_vertical()
+int count_lines_vertical(node n, int player)
 {
     int count = 0;
     bool right = true;
     bool left = true;
     int score = 0;
     //player = 1;
+    //node n;
     for(int i = 0; i < 15; i++)
     {
         for(int j = 0; j < 15; j++)
         {
 
-            if(nowmap[i][j] == player)
+            if(n.Board[i][j] == player)
             {
                 count = 1;
-                if(j == 0 || nowmap[i][j-1] == 3-player) left = false;
+                if(j == 0 || n.Board[i][j-1] == 3-player) left = false;
                 //if(j == 14 || nowmap[i][j+1] == 3-player) right = false;
                 while(count <= 5)
                 {
-                    if(nowmap[i][j+1] == player && j+1 != 14)
+                    if(n.Board[i][j+1] == player && j+1 != 14)
                     {
                         count++;
                         j++;
                     }
-                    else if(nowmap[i][j+1] == player && j+1 == 14)
+                    else if(n.Board[i][j+1] == player && j+1 == 14)
                     {
                         count++;
                         right = false;
                         break;
                         //j++;
                     }
-                    else if(nowmap[i][j+1] == 3-player)
+                    else if(n.Board[i][j+1] == 3-player)
                     {
                         right = false;
                         break;
@@ -287,37 +309,38 @@ return score;
     
     
     
-int count_lines_horizontal()
+int count_lines_horizontal(node n, int player)
 {
     int count = 0;
     bool up = true;
     bool down = true;
     int score = 0;
     //player = 1;
+    //node n;
     for(int j = 0; j < 15; j++)
     {
         for(int i = 0; i < 15; i++)
         {
-            if(nowmap[i][j] == player)
+            if(n.Board[i][j] == player)
             {
                 count = 1;
-                if(j == 0 || nowmap[j-1][j] == 3-player) up = false;
+                if(j == 0 || n.Board[j-1][j] == 3-player) up = false;
 //                if(i == 14 || nowmap[i+1][j] == 3-player) down = false;
                 while(count <= 5)
                 {
-                    if(nowmap[i+1][j] == player && i+1 != 14)
+                    if(n.Board[i+1][j] == player && i+1 != 14)
                     {
                         count++;
                         i++;
                     }
-                    else if(nowmap[i+1][j] == player && i+1 == 14)
+                    else if(n.Board[i+1][j] == player && i+1 == 14)
                     {
                         count++;
                         down = false;
                         break;
                         //j++;
                     }
-                    else if(nowmap[i+1][j] == 3-player)
+                    else if(n.Board[i+1][j] == 3-player)
                     {
                         down = false;
                         break;
@@ -385,7 +408,7 @@ return score;
 }
     
     
-int count_left_slash()
+int count_left_slash(node n, int player)
 {
         int count = 0;
         bool down = true;
@@ -477,17 +500,17 @@ int count_left_slash()
 //        up = true;
 //        down = true;
 //        count = 1;
-        
+    //node n;
         for(int i = 1; i < 15; i++)
         {
             for(int k = 0; k+i<15 && 14-k >= 0; k++)
             {
-                if(nowmap[k+i][14-k] == player)
+                if(n.Board[k+i][14-k] == player)
                 {
                     up = true;
                     down = true;
                     count = 1;
-                    if(k == 0 || nowmap[i+k-1][15-k] == 3-player)
+                    if(k == 0 || n.Board[i+k-1][15-k] == 3-player)
                     {
                         up = false;
                     }
@@ -495,14 +518,14 @@ int count_left_slash()
                     {
                         if(i+k+1 < 15 && (14-k) >= 0)
                         {
-                            if(nowmap[i+k+1][14-k] == player)
+                            if(n.Board[i+k+1][14-k] == player)
                             {
                                 k++;
                                 count++;
                             }
                             else
                             {
-                                down = (nowmap[k+1+i][14-k] == 0? true:false);
+                                down = (n.Board[k+1+i][14-k] == 0? true:false);
                                 break;
                             }
                         }
@@ -565,35 +588,36 @@ int count_left_slash()
         return score;
 }
     
-    int count_right_slash()
+    int count_right_slash(node n, int player)
     {
         int count = 0;
         bool down = true;
         bool up = true;
         int score = 0;
         
+        //node n;
         for(int i = 0; i < 15; i++)
         {
             for(int j = 0; i+j < 15; j++)
             {
-                if(nowmap[i+j][j] == player)
+                if(n.Board[i+j][j] == player)
                 {
                     up = true;
                     down = true;
                     count = 1;
-                    if(j == 0 || nowmap[i+j-1][j-1] == 3-player) down = false;
+                    if(j == 0 || n.Board[i+j-1][j-1] == 3-player) down = false;
                     while(1)
                     {
                         if(j < 14 && i+j < 14)
                         {
-                            if(nowmap[i+j+1][j+1] == player)
+                            if(n.Board[i+j+1][j+1] == player)
                             {
                                 j++;
                                 count++;
                             }
                             else
                             {
-                                up = (nowmap[i+j+1][j+1] == 0? true:false);
+                                up = (n.Board[i+j+1][j+1] == 0? true:false);
                                 break;
                             }
                         }
@@ -657,16 +681,17 @@ int count_left_slash()
         up = true;
         down = true;
         count = 1;
+        //node n;
         for(int j = 1; j < 15; j++)
         {
             for(int k = 0; k+j<15; k++)
             {
-                if(nowmap[k][j+k] == player)
+                if(n.Board[k][j+k] == player)
                 {
                     up = true;
                     down = true;
                     count = 1;
-                    if(k == 0 || nowmap[k-1][j+k-1] == 3-player)
+                    if(k == 0 || n.Board[k-1][j+k-1] == 3-player)
                     {
                         down = false;
                     }
@@ -674,14 +699,14 @@ int count_left_slash()
                     {
                         if(j < 15 && j+k<14)
                         {
-                            if(nowmap[k+1][j+k+1] == player)
+                            if(n.Board[k+1][j+k+1] == player)
                             {
                                 k++;
                                 count++;
                             }
                             else
                             {
-                                up = (nowmap[k+1][j+k+1] == 0? true:false);
+                                up = (n.Board[k+1][j+k+1] == 0? true:false);
                                 break;
                             }
                         }
@@ -748,9 +773,9 @@ int count_left_slash()
     
     
 int finalscore = 0;
-int add_all()
+int add_all(node n, int player)
 {
-    finalscore = count_right_slash() + count_left_slash() + count_lines_vertical() + count_lines_horizontal();
+    finalscore = count_right_slash(n, player) + count_left_slash(n, player) + count_lines_vertical(n, player) + count_lines_horizontal(n, player);
     return finalscore;
 }
     
@@ -787,64 +812,11 @@ int add_all()
 
 
 
-
-
-int minimax(node now, int depth, bool maximizingPlayer)
-{
-    if(depth == 0)
-    {
-        return finalscore;
-    }
-    if(maximizingPlayer)
-    {
-        node now;
-        int value = -1000000000;
-        for(int i=0; i<SIZE; i++)
-        {
-            for(int j=0; j<SIZE; j++)
-            {
-                if(now.Board[i][j]==0)
-                {
-                    node newnode(now);
-                    newnode[i][j]=player;
-                    int ab = minimax(newnode, depth-1, alpha, beta, !maximizingPlayer);
-                    //x y
-                    value = max(value, ab);
-                }
-            }
-        }
-    }
-    else
-    {
-        node now;
-        int value = 1000000000;
-        for(int i=0; i<SIZE; i++)
-        {
-            for(int j=0; j<SIZE; j++)
-            {
-                if(now.Board[i][j]==0)
-                {
-                    node newnode(now);
-                    newnode[i][j]=player;
-                    int ab = minimax(newnode, depth-1, alpha, beta, maximizingPlayer);
-                    //x y
-                    value = min(value, ab);
-                }
-            }
-        }
-        
-        
-        
-    }
-        
-}
-
-
 int alphabeta(node now, int depth, int alpha, int beta, bool maximizingPlayer)
 {
     if(depth == 0)
     {
-        return finalscore;
+        return add_all(now, player) - add_all(now, 3-player);
     }
     if(maximizingPlayer)
     {
@@ -856,8 +828,8 @@ int alphabeta(node now, int depth, int alpha, int beta, bool maximizingPlayer)
                 if(now.Board[i][j]==0)
                 {
                     node newnode(now);
-                    newnode[i][j]=player;
-                    int ab = minimax(newnode, depth-1, alpha, beta, !maximizingPlayer);
+                    newnode.Board[i][j]=player;
+                    int ab = alphabeta(newnode, depth-1, alpha, beta, !maximizingPlayer);
                     //x y
                     value = max(value, ab);
                     alpha = max(alpha, value);
@@ -867,7 +839,6 @@ int alphabeta(node now, int depth, int alpha, int beta, bool maximizingPlayer)
         }
         return value;
     }
-    
         
     else
     {
@@ -879,8 +850,8 @@ int alphabeta(node now, int depth, int alpha, int beta, bool maximizingPlayer)
                 if(now.Board[i][j]==0)
                 {
                     node newnode(now);
-                    newnode[i][j]=3-player;
-                    int ab = minimax(newnode, depth-1, alpha, beta, !maximizingPlayer);
+                    newnode.Board[i][j]=3-player;
+                    int ab = alphabeta(newnode, depth-1, alpha, beta, !maximizingPlayer);
                     //x y
                     value = min(value, ab);
                     beta = min(beta, value);
@@ -890,4 +861,15 @@ int alphabeta(node now, int depth, int alpha, int beta, bool maximizingPlayer)
         }
         return value;
     }
+}
+
+int main(int, char** argv)
+{
+    std::ifstream fin(argv[1]);
+    std::ofstream fout(argv[2]);
+    read_board(fin);
+    write_valid_spot(fout);
+    fin.close();
+    fout.close();
+    return 0;
 }
